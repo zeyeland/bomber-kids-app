@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css"  href="http://zeyeland.com/bomber-kids-master/index.css">
+       <title><!-- Page Title --></title>
+       <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    </head>
+    <body>
+
+            <main id="canvasMain" ontouchstart="dropBombFunction()" style="border:1px solid #000000;"></main>
+        
+        <img src="http://zeyeland.com/bomber-kids-master/assets/DPAD_png/upKeyMoblie.png" ontouchstart="moveUP()" id="buttonUP" >
+        <img src="http://zeyeland.com/bomber-kids-master/assets/DPAD_png/downKeyMoblie.png" ontouchstart="moveDOWN()" id="buttonDOWN" >
+        <img src="http://zeyeland.com/bomber-kids-master/assets/DPAD_png/centerKey.png" id="buttonCENTER" >
+        <img src="http://zeyeland.com/bomber-kids-master/assets/DPAD_png/leftKeyMoblie.png" ontouchstart="moveLEFT()" id="buttonLEFT" >
+        <img src="http://zeyeland.com/bomber-kids-master/assets/DPAD_png/rightKeyMoblie.png" ontouchstart="moveRIGHT()"id="buttonRIGHT" >
+    
+
+    </body>
+    <script src="http://zeyeland.com/bomber-kids-master/javascript/maps.js"></script>
+    <script src="http://zeyeland.com/bomber-kids-master/javascript/objectsGrid.js"></script>
+    <script src="http://zeyeland.com/bomber-kids-master/javascript/itemBlock.js"></script>
+    <script src="http://zeyeland.com/bomber-kids-master/javascript/items.js"></script>
+    <script src="http://zeyeland.com/bomber-kids-master/javascript/collisionMechanics.js"></script>
+    <script src="http://zeyeland.com/bomber-kids-master/javascript/player.js"></script>
+    <script src="http://zeyeland.com/bomber-kids-master/javascript/bomb.js"></script>
+
+    <script src="http://zeyeland.com/bomber-kids-master/javascript/game.js"></script>
+
+    <script src="http://zeyeland.com/bomber-kids-master/javascript/moblieController.js"></script>
+
+	<script src="/socket.io/socket.io.js"></script>
+
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+
+        var socket = io();
+        const playerId = Math.floor((Math.random() * 1000) + 1);
+        var originY;
+        var originX;
+        function dragonBirth(){
+            
+            socket.emit('newPlayer', playerId ); 
+            
+            socket.on('newPlayer', function(arrayLocationY, arrayLocationX, serverId){
+
+                if( serverId == playerId){
+                    originY = arrayLocationY * canvasHEIGHTblock;
+                    originX = arrayLocationX * canvasWIDTHblock; 
+                  player1.y = originY;
+                  player1.x = originX;
+                }
+                else{
+                    console.log("A player connected");
+                    playerGrid[arrayLocationY][arrayLocationX] = 1;
+                }
+                
+            });
+
+        }
+  
+//bombs use focusObject... for id of player, focusobject is a directions
+var testingNum = 0;
+    function dragonDeath(){
+        socket.on('deadPlayer', function(arrayLocationY, arrayLocationX, teleportDeadLocationY, teleportDeadLocationX, serverId){
+            
+            if( playerId != serverId){
+                if(testingNum < 1){
+                    console.log("IIIIIIIIIIIII GOT A KILLLLL!");
+                    testingNum++;
+                }
+            
+            
+            playerGrid[arrayLocationY][arrayLocationX] = 0;
+            
+            }
+
+            if(playerId == serverId){
+                if(testingNum < 1){
+                    console.log("I was killed :");
+                    testingNum++;
+                }
+                player1.y = teleportDeadLocationY * canvasHEIGHTblock ;
+                player1.x = teleportDeadLocationX * canvasWIDTHblock;
+            }
+        });
+    }     
+
+function dragonBorn(focusObject, id)
+{
+        if(id == "testingBomb"){
+            //console.log(focusObject.y/canvasHEIGHTblock);
+            socket.emit('sendNoramlBomb', focusObject.x/canvasWIDTHblock, focusObject.y/canvasHEIGHTblock, 0 );
+        }        
+        if(id == "normalBomb"){
+            //console.log(focusObject.y/canvasHEIGHTblock);
+            socket.emit('sendNoramlBomb', focusObject.x/canvasWIDTHblock, focusObject.y/canvasHEIGHTblock, focusObject.power );
+        }
+        if(id == "redBomb"){
+            console.log(focusObject.y/canvasHEIGHTblock);
+            socket.emit('sendRedBomb', focusObject.x/canvasWIDTHblock, focusObject.y/canvasHEIGHTblock, focusObject.power );
+        }
+        if(id == "blueBomb"){
+            console.log(focusObject.y/canvasHEIGHTblock);
+            socket.emit('sendBlueBomb', focusObject.x/canvasWIDTHblock, focusObject.y/canvasHEIGHTblock, focusObject.power );
+        }
+        if(id == "greyBomb"){
+            console.log(focusObject.y/canvasHEIGHTblock);
+            socket.emit('sendGreyBomb', focusObject.x/canvasWIDTHblock, focusObject.y/canvasHEIGHTblock, focusObject.power );
+        }
+        if(id == "greenBomb"){
+            console.log(focusObject.y/canvasHEIGHTblock);
+            socket.emit('sendGreenBomb', focusObject.x/canvasWIDTHblock, focusObject.y/canvasHEIGHTblock, focusObject.power );
+        }
+    
+        socket.on('sendNoramlBomb', function( xPosition, yPosition, power){
+            //if( objectGrid[yPosition][xPosition] == 0){
+                var sentBomb = new droppedBomb(xPosition*canvasWIDTHblock,yPosition*canvasHEIGHTblock,power,null);
+                
+            //}
+            //console.log('Bomb should have been received from server');
+        });
+        socket.on('sendRedBomb', function( xPosition, yPosition, power){
+            //if( objectGrid[yPosition][xPosition] == 0){
+                var sentBomb = new droppedBombRED(xPosition*canvasWIDTHblock,yPosition*canvasHEIGHTblock,power,null);
+            //}
+            //console.log('Bomb should have been received from server');
+        });
+        socket.on('sendBlueBomb', function( xPosition, yPosition, power){
+            //if( objectGrid[yPosition][xPosition] == 0){
+                var sentBomb = new droppedBombBLUE(xPosition*canvasWIDTHblock,yPosition*canvasHEIGHTblock,power,null);
+            //}
+            //console.log('Bomb should have been received from server');
+        });
+        socket.on('sendGreyBomb', function( xPosition, yPosition, power){
+            //if( objectGrid[yPosition][xPosition] == 0){
+                var sentBomb = new droppedBombGREY(xPosition*canvasWIDTHblock,yPosition*canvasHEIGHTblock,power,null);
+            //}
+            //console.log('Bomb should have been received from server');
+        });
+        socket.on('sendGreenBomb', function( xPosition, yPosition, power){
+            //if( objectGrid[yPosition][xPosition] == 0){
+                var sentBomb = new droppedBombGREEN(xPosition*canvasWIDTHblock,yPosition*canvasHEIGHTblock,power,null);
+            //}
+            //console.log('Bomb should have been received from server');
+        });
+} 
+    
+    function dragonBorn2(locationY,locationX, direction){
+    
+
+    socket.emit('sendPlayer', locationY/canvasHEIGHTblock, locationX/canvasWIDTHblock, direction ); 
+
+    socket.on('sendPlayer', function(locationY, locationX, direction){
+        
+            if(direction == "ABOVE"  ){
+                playerGrid[locationY+1][locationX] = 0;
+                playerGrid[locationY][locationX] = 1;
+            }
+            if(direction == "BELOW" ){
+                playerGrid[locationY-1][locationX] = 0;
+                playerGrid[locationY][locationX] = 1;
+            }
+            if(direction == "RIGHT" ){
+                playerGrid[locationY][locationX-1] = 0;
+                playerGrid[locationY][locationX] = 1;
+            }
+            if(direction == "LEFT" ){
+                playerGrid[locationY][locationX+1] = 0;
+                playerGrid[locationY][locationX] = 1;
+            }
+            
+    });//end of socket.on
+}
+    
+    dragonBorn(player1,"testingBomb")
+    dragonBirth();
+    </script>
+    
+</html>
